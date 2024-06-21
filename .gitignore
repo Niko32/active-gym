@@ -9,3 +9,5 @@
 *.egg-info
 tmp
 tmp/
+
+venv
