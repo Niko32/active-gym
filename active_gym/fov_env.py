@@ -242,7 +242,7 @@ class PausibleFixedFovealEnv(FixedFovealEnv):
     def __init__(self, env: gym.Env, args):
         super().__init__(env, args)
         self.action_space = Dict({
-            "motor": Discrete((self.env.actions)),
+            "motor": Discrete(len(self.env.actions)),
             "sensory": Box(low=self.sensory_action_space[0], 
                                  high=self.sensory_action_space[1], dtype=int),
             # This additional action lets the agent stop the game to perform a 
