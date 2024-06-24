@@ -6,7 +6,7 @@ from typing import Tuple, Union
 
 import cv2
 import gymnasium as gym
-from gymnasium.spaces import Box, Discrete, Dict
+from gymnasium.spaces import Box, Discrete, Dict, MultiBinary
 
 import numpy as np
 import torch
@@ -232,6 +232,47 @@ class FixedFovealEnv(gym.Wrapper):
             return self.env.unwrapped
         else:
             return self.env
+
+class PausibleFixedFovealEnv(FixedFovealEnv):
+    """
+    Environemt making it possible to be paused to only take
+    a sensory action without progressing the game.
+    """
+    # TODO: Time costs and 20Hz Mode
+    def __init__(self, env: gym.Env, args):
+        super().__init__(self, env, args)
+        self.action_space = Dict({
+            "motor": Discrete((self.env.actions)),
+            "sensory": Box(low=self.sensory_action_space[0], 
+                                 high=self.sensory_action_space[1], dtype=int),
+            # This additional action lets the agent stop the game to perform a 
+            # sensory action without the game progressing  
+            "pause": MultiBinary(1)
+        })
+
+    def step(self, action):
+        if action["pause"] and self.state:
+            # Only make a sensory step
+            reward, done, truncated = 0, False, False
+            info = self._get_info(raw_reward=reward)
+            fov_state = self._fov_step(full_state=self.state, action=action["sensory"])
+            info["fov_loc"] = self.fov_loc.copy()
+            if self.record:
+                if not done:
+                    self.save_transition(info["fov_loc"])
+
+            return fov_state, reward, done, truncated, info
+
+        # Normal step
+        state, reward, done, truncated, info = self.env.step(action=action["motor"])
+        # Safe the state for the next sensory step
+        self.state = state
+        fov_state = self._fov_step(full_state=state, action=action["sensory"])
+        info["fov_loc"] = self.fov_loc.copy()
+        if self.record:
+            if not done:
+                self.save_transition(info["fov_loc"])
+        return fov_state, reward, done, truncated, info
 
 class FlexibleFovealEnvActionType(IntEnum):
     FOV_LOC = 0

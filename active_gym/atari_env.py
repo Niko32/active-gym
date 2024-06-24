@@ -19,7 +19,8 @@ from .fov_env import (
     FixedFovealEnv, 
     FlexibleFovealEnv, 
     FixedFovealPeripheralEnv,
-    FlexibleFovealEnvActionType
+    FlexibleFovealEnvActionType,
+    PausibleFixedFovealEnv
 )
 
 class AtariEnvArgs:
@@ -234,6 +235,11 @@ def AtariFlexibleFovealEnv(args: AtariEnvArgs)-> gym.Wrapper:
 def AtariFixedFovealPeripheralEnv(args: AtariEnvArgs) -> gym.Wrapper:
     base_env = AtariBaseEnv(args)
     wrapped_env = FixedFovealPeripheralEnv(base_env, args)
+    return wrapped_env
+
+def AtariHeadFixedFovealEnv(args: AtariEnvArgs) -> gym.Wrapper:
+    base_env = AtariBaseEnv(args)
+    wrapped_env = PausibleFixedFovealEnv(base_env, args)
     return wrapped_env
 
 # test
