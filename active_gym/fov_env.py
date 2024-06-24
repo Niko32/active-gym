@@ -240,7 +240,7 @@ class PausibleFixedFovealEnv(FixedFovealEnv):
     """
     # TODO: Time costs and 20Hz Mode
     def __init__(self, env: gym.Env, args):
-        super().__init__(self, env, args)
+        super().__init__(env, args)
         self.action_space = Dict({
             "motor": Discrete((self.env.actions)),
             "sensory": Box(low=self.sensory_action_space[0], 

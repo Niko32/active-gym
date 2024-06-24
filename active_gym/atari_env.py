@@ -172,51 +172,6 @@ class AtariEnv(gym.Env):
     def close(self):
         pass
 
-class AtariHeadEnv(AtariEnv):
-    """
-    Environment simulating the setting used in Atari-HEAD (http://arxiv.org/abs/1903.06754),
-    where people played the game in a semi-frame-by-frame manner. 
-    Participants could take as much time to look at a frame before taking an action. Alternatively
-    an additional button could be pressed to keep the game running at 20 Hz (1/3 of the normal speed).
-    """
-    def __init__(self, args):
-        super().__init__(args)
-        # Append actions for continuing to the next game frame:
-        # -1: pressing continue button
-        # -2: pushing down continue button (to play the game at 20Hz)
-        # -3: unpushing continue button (to pause again)
-        # actions = self.ale.getMinimalActionSet()
-        # np.append(actions, [-1])
-        # np.append(actions, [-2., -3])
-        # self.actions = dict([i, e] for i, e in zip(range(len(actions)), actions))
-
-        # Add another action that can be taken at every time step
-        # This action pushes down a button, that will make the game
-        # run at 20Hz, even without a normal key input
-        self.action_space = MultiDiscrete([len(self.actions), 2])
-
-    def _step(self, action):
-        ale_action = action[0]
-        continue_action = action[1]
-
-        # If NOOP and no continue button
-        if ale_action == 0 and not continue_action:
-            # Only make a vision step
-
-            reward, done = 0, False
-            observation = self._get_state()
-            self.state_buffer.append(observation)
-
-            # Return state, reward, done
-            state = np.stack(self.state_buffer, axis=0)
-            return_reward = np.sign(reward) if self.clip_reward else reward
-            truncated = False
-            info = self._get_info(raw_reward=reward)
-
-            return state, return_reward, done, truncated, info
-        
-        return super()._step(ale_action)
-
 def AtariBaseEnv(args: AtariEnvArgs) -> gym.Wrapper:
     base_env = AtariEnv(args)
     wrapped_env = RecordWrapper(base_env, args)
